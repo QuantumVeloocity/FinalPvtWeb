@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aditya Shaurya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#08080a;
+    --bg-1:#0f0f12;
+    --surface:#17171b;
+    --surface-2:#1f1f24;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.14);
+    --text-0:#eeeeec;
+    --text-1:#a3a3ab;
+    --text-2:#6b6b74;
+    --accent:#3ea88f;
+    --accent-soft:rgba(62,168,143,0.18);
+    --danger:#ff5f57;
+    --warn:#febc2e;
+    --ok:#28c840;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:8px;
+    --shadow-window: 0 30px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background:var(--bg-0);
+    color:var(--text-0);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--accent-soft); color:var(--text-0); }
+  .mono{ font-family:'Space Mono',monospace; }
+
+  /* ---------- BOOT SCREEN ---------- */
+  #boot-screen{
+    position:fixed; inset:0; z-index:9999;
+    background:var(--bg-0);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:28px;
+    transition:opacity 0.7s ease;
+  }
+  #boot-screen.hide{ opacity:0; pointer-events:none; }
+  .boot-logo{
+    width:64px; height:64px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Mono',monospace; font-weight:700; font-size:22px;
+    color:#ffffff;
+    animation:boot-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes boot-pulse{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.05); }
+  }
+  .boot-bar-track{
+    width:220px; height:3px; border-radius:2px; background:var(--surface-2); overflow:hidden;
+  }
+  .boot-bar-fill{
+    height:100%; width:0%; background:#ffffff; border-radius:2px;
+    transition:width 0.15s linear;
+  }
+  .boot-label{ font-size:11px; letter-spacing:0.12em; color:var(--text-2); text-transform:uppercase; }
+
+  /* ---------- DESKTOP ---------- */
+  #desktop{
+    position:fixed; inset:0;
+    opacity:0; transition:opacity 0.8s ease;
+  }
+  #desktop.show{ opacity:1; }
+
+  .wallpaper{
+    position:absolute; inset:0;
+    /* Drop a file named wallpaper.jpg next to this HTML file and it will
+       be used automatically. Until then this generic stadium-lights /
+       silhouette scene renders as the background. See note at bottom
+       of this file for why no real photo is embedded here. */
+    background-image: url('wallpaper.jpg'), 
+      radial-gradient(ellipse 120% 60% at 50% 100%, rgba(255,196,102,0.10), transparent 60%),
+      radial-gradient(circle at 20% 15%, rgba(62,168,143,0.10), transparent 45%),
+      linear-gradient(180deg, #0b0d10 0%, #0a0b0d 55%, #07080a 100%);
+    background-size:cover, cover, cover, cover;
+    background-position:center, center, center, center;
+  }
+  .wallpaper svg{ position:absolute; bottom:0; left:50%; transform:translateX(-50%); opacity:0.9; }
+  .wallpaper .field-line{
+    position:absolute; bottom:0; left:0; right:0; height:38%;
+    background:linear-gradient(180deg, transparent, rgba(20,40,30,0.35));
+  }
+  .wallpaper .light-glow{
+    position:absolute; width:340px; height:340px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%);
+    filter:blur(10px);
+  }
+  .glow-1{ top:6%; left:8%; } .glow-2{ top:10%; right:10%; width:260px; height:260px; }
+
+  /* ---------- MENU BAR ---------- */
+  .menubar{
+    position:absolute; top:0; left:0; right:0; height:30px;
+    background:rgba(15,15,18,0.55);
+    backdrop-filter:blur(20px) saturate(150%);
+    -webkit-backdrop-filter:blur(20px) saturate(150%);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px; font-size:12.5px; color:var(--text-1); z-index:50;
+  }
+  .menubar .left{ display:flex; align-items:center; gap:18px; }
+  .menubar .brand{ font-weight:700; color:var(--text-0); font-size:13px; }
+  .menubar .item{ opacity:0.85; cursor:default; }
+  .menubar .right{ display:flex; align-items:center; gap:14px; }
+  .menubar .right span{ opacity:0.8; }
+  #clock{ font-variant-numeric:tabular-nums; color:var(--text-0); }
+
+  /* ---------- HERO / TYPED NAME ---------- */
+  .hero{
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    pointer-events:none; text-align:center; padding:0 20px;
+  }
+  #typed-name{
+    font-family:'Space Mono', 'SF Mono', 'Menlo', 'Consolas', monospace;
+    font-size:clamp(34px, 6vw, 72px);
+    font-weight:400; letter-spacing:-0.005em; margin:0;
+    color:var(--text-0);
+    text-shadow:0 10px 40px rgba(0,0,0,0.5);
+    min-height:1.2em;
+  }
+  #typed-name .cursor{
+    display:inline-block; width:3px; margin-left:4px;
+    background:#ffffff; animation:blink 0.9s step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+  .hero .tagline{
+    margin-top:10px; font-family:'Space Mono',monospace; font-size:13px;
+    letter-spacing:0.08em; color:var(--text-2); text-transform:uppercase;
+  }
+
+  /* ---------- WIDGETS ---------- */
+  .widgets{
+    position:absolute; top:56px; right:20px; z-index:40;
+    display:flex; flex-direction:column; gap:14px; width:270px;
+  }
+  .widget{
+    background:rgba(23,23,27,0.6);
+    backdrop-filter:blur(24px) saturate(160%);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    padding:14px;
+    box-shadow:0 20px 40px -20px rgba(0,0,0,0.5);
+    text-decoration:none; color:inherit; display:block;
+    transition:transform 0.25s ease, border-color 0.25s ease;
+  }
+  .widget:hover{ transform:translateY(-2px); border-color:var(--border-strong); }
+
+  .spotify-top{ display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+  .spotify-logo{
+    width:14px; height:14px; border-radius:50%; flex-shrink:0;
+    background-image:url('spotify.jpg'), radial-gradient(circle, #3fdd77, #149249);
+    background-size:cover; background-position:center;
+  }
+  .spotify-top span{ font-size:10.5px; letter-spacing:0.1em; color:var(--text-2); text-transform:uppercase; font-family:'Space Mono',monospace;}
+  .spotify-body{ display:flex; align-items:center; gap:12px; }
+  .album-art{
+    width:46px; height:46px; border-radius:6px; flex-shrink:0;
+    background-image:url('music.jpg'), linear-gradient(135deg, #2b2b31, #17171b);
+    background-size:cover; background-position:center;
+    border:1px solid var(--border);
+    position:relative; overflow:hidden;
+  }
+  .album-art::after{
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 30% 30%, rgba(62,168,143,0.35), transparent 60%);
+  }
+  .track-info{ min-width:0; flex:1; }
+  .track-name{ font-size:13px; font-weight:600; color:var(--text-0); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .track-artist{ font-size:11.5px; color:var(--text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+  .eq{ display:flex; align-items:flex-end; gap:2px; height:14px; margin-left:auto; flex-shrink:0; }
+  .eq span{ width:3px; background:#ffffff; border-radius:2px; animation:eq 1.1s ease-in-out infinite; }
+  .eq span:nth-child(1){ height:6px; animation-delay:0s; }
+  .eq span:nth-child(2){ height:14px; animation-delay:0.2s; }
+  .eq span:nth-child(3){ height:9px; animation-delay:0.4s; }
+  @keyframes eq{ 0%,100%{ transform:scaleY(0.4); } 50%{ transform:scaleY(1); } }
+
+  .ig-top{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .ig-avatar{
+    width:30px; height:30px; border-radius:50%;
+    background:linear-gradient(135deg,#feda75,#d62976,#4f5bd5);
+    padding:2px;
+  }
+  .ig-avatar-inner{ width:100%; height:100%; border-radius:50%; background:var(--bg-1); }
+  .ig-handle{ font-size:12.5px; font-weight:600; }
+  .ig-sub{ font-size:10.5px; color:var(--text-2); }
+  .ig-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+  .ig-grid div{
+    aspect-ratio:1; border-radius:5px;
+    background:linear-gradient(135deg, var(--surface-2), var(--bg-1));
+    border:1px solid var(--border);
+  }
+
+  /* ---------- DOCK ---------- */
+  .dock{
+    position:absolute; bottom:14px; left:50%; transform:translateX(-50%);
+    display:flex; align-items:flex-end; gap:10px;
+    padding:10px 14px;
+    background:rgba(23,23,27,0.55);
+    backdrop-filter:blur(24px) saturate(180%);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);
+    border:1px solid var(--border);
+    border-radius:22px;
+    box-shadow:0 20px 50px -15px rgba(0,0,0,0.6);
+    z-index:60;
+  }
+  .dock-icon{
+    width:66px; height:66px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; position:relative; text-decoration:none;
+    transition:transform 0.12s ease-out;
+    transform-origin:bottom center;
+  }
+  .icon-face{
+    position:absolute; inset:0; border-radius:26%; overflow:hidden;
+    box-shadow:0 4px 10px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -8px 14px rgba(0,0,0,0.18);
+    transition:box-shadow 0.18s ease;
+    background-size:cover; background-position:center; background-repeat:no-repeat;
+  }
+  .icon-face::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0) 60%);
+    pointer-events:none;
+  }
+  .dock-icon svg{ width:32px; height:32px; position:relative; z-index:1; }
+  .dock-icon:hover .icon-face{ box-shadow:0 14px 24px -6px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .dock-icon:active{ transform:translateY(-6px) scale(1.02) !important; }
+
+  /* Each of these looks for a same-named image file first (e.g. about.jpg) and
+     falls back to the gradient if that file doesn't exist yet - drop your own
+     icon images in the same folder as this HTML file using these exact names. */
+  .icon-about{ background-image:url('about.jpg'), linear-gradient(160deg,#6fb1ff,#2f6fed); }
+  .icon-experience{ background-image:url('experience.jpg'), linear-gradient(160deg,#ffb15e,#f2762e); }
+  .icon-resume{ background-image:url('resume.jpg'), linear-gradient(160deg,#ff8a8a,#e6483f); }
+  .icon-gallery{ background-image:url('gallery.jpg'), linear-gradient(160deg,#d891f5,#a238dd 55%,#e14ea8); }
+  .icon-contact{ background-image:url('contact.jpg'), linear-gradient(160deg,#63e6b0,#0fa968); }
+  .icon-spotify{ background-image:url('spotify.jpg'), linear-gradient(160deg,#3fdd77,#149249); }
+  .icon-instagram{ background-image:url('instagram.jpg'), linear-gradient(135deg,#feda75,#d62976 55%,#4f5bd5); }
+  .icon-sidequest{ background-image:url('sidequest.jpg'), linear-gradient(160deg,#9d9dff,#5b5be0); }
+  .dock-icon .dot{
+    position:absolute; bottom:-7px; left:50%; transform:translateX(-50%);
+    width:4px; height:4px; border-radius:50%; background:var(--text-2);
+    opacity:0; transition:opacity 0.2s ease;
+  }
+  .dock-icon.open .dot{ opacity:1; background:var(--accent); }
+  .dock-icon .tip{
+    position:absolute; bottom:78px; left:50%; transform:translateX(-50%) translateY(4px);
+    background:rgba(40,40,44,0.96); color:#fff; font-size:12px; font-weight:500;
+    padding:5px 11px; border-radius:7px; white-space:nowrap;
+    opacity:0; pointer-events:none; transition:opacity 0.15s ease, transform 0.15s ease;
+    box-shadow:0 8px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+    z-index:80;
+  }
+  .dock-icon .tip::after{
+    content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:5px solid transparent; border-top-color:rgba(40,40,44,0.96);
+  }
+  .dock-icon:hover .tip{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ---------- WINDOWS ---------- */
+  #windows-container{ position:absolute; inset:0; z-index:70; pointer-events:none; }
+  .app-window{
+    position:absolute; width:560px; max-width:90vw; min-width:320px;
+    background:rgba(20,20,24,0.85);
+    backdrop-filter:blur(30px) saturate(160%);
+    -webkit-backdrop-filter:blur(30px) saturate(160%);
+    border:1px solid var(--border-strong);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-window);
+    pointer-events:auto;
+    display:flex; flex-direction:column;
+    animation:win-in 0.28s cubic-bezier(.2,.8,.3,1.2);
+    overflow:hidden;
+  }
+  @keyframes win-in{ from{ opacity:0; transform:scale(0.92) translateY(14px);} to{ opacity:1; transform:scale(1) translateY(0);} }
+  .app-window.closing{ animation:win-out 0.2s ease forwards; }
+  @keyframes win-out{ to{ opacity:0; transform:scale(0.92) translateY(10px);} }
+  .app-window.maximized{ width:92vw !important; height:86vh !important; top:6vh !important; left:4vw !important; }
+
+  .titlebar{
+    height:40px; flex-shrink:0; display:flex; align-items:center; gap:14px;
+    padding:0 14px; cursor:grab; user-select:none;
+    background:rgba(255,255,255,0.02);
+    border-bottom:1px solid var(--border);
+  }
+  .titlebar:active{ cursor:grabbing; }
+  .traffic{ display:flex; gap:8px; }
+  .traffic button{
+    width:12px; height:12px; border-radius:50%; border:none; padding:0; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:8px; color:transparent;
+  }
+  .traffic button:hover{ color:rgba(0,0,0,0.5); }
+  .t-close{ background:var(--danger); } .t-min{ background:var(--warn); } .t-max{ background:var(--ok); }
+  .titlebar .win-title{ font-size:12.5px; font-weight:600; color:var(--text-1); margin:0 auto; transform:translateX(-14px); }
+
+  .win-body{ padding:26px 28px 30px; overflow-y:auto; color:var(--text-1); font-size:14.5px; line-height:1.65; }
+  .win-body h2{ font-size:22px; color:var(--text-0); margin:0 0 6px; letter-spacing:-0.01em; }
+  .win-body .eyebrow{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:#ffffff; margin-bottom:10px; display:block; }
+  .win-body a{ color:#ffffff; text-decoration:none; border-bottom:1px solid transparent; transition:border-color 0.15s; }
+  .win-body a:hover{ border-color:var(--accent); }
+  .win-body p{ margin:0 0 14px; }
+
+  .exp-item{ padding:14px 0; border-bottom:1px solid var(--border); }
+  .exp-item:last-child{ border-bottom:none; }
+  .exp-item .row{ display:flex; justify-content:space-between; gap:10px; align-items:baseline; }
+  .exp-item .role{ font-weight:700; color:var(--text-0); font-size:15px; }
+  .exp-item .dates{ font-family:'Space Mono',monospace; font-size:11px; color:var(--text-2); white-space:nowrap; }
+  .exp-item .org{ font-size:12.5px; color:#ffffff; margin-top:2px; }
+  .exp-item .desc{ margin-top:6px; font-size:13.5px; }
+
+  .contact-row{ display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .contact-row:last-child{ border-bottom:none; }
+  .contact-row .icon{ width:34px; height:34px; border-radius:9px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .contact-row .icon svg{ width:16px; height:16px; }
+  .contact-row .label{ font-size:11px; color:var(--text-2); text-transform:uppercase; letter-spacing:0.08em; font-family:'Space Mono',monospace; }
+  .contact-row .value{ font-size:14px; color:var(--text-0); }
+
+  .resume-box{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:18px; border:1px solid var(--border); border-radius:var(--radius-md);
+    background:var(--surface); margin-bottom:16px;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; padding:9px 16px;
+    background:var(--accent); color:#08130f; font-weight:700; font-size:13px;
+    border-radius:9px; text-decoration:none; border:none; cursor:pointer;
+  }
+  .btn:hover{ opacity:0.9; }
+
+  .gallery-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  .gallery-item{
+    aspect-ratio:1; border-radius:10px; display:block;
+    background:linear-gradient(135deg, var(--surface-2), var(--bg-1));
+    border:1px solid var(--border); position:relative; overflow:hidden;
+    text-decoration:none;
+  }
+  .gallery-item::after{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 30% 20%, rgba(62,168,143,0.25), transparent 60%); }
+
+  #lightbox{
+    position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:200;
+    display:none; align-items:center; justify-content:center;
+  }
+  #lightbox.show{ display:flex; }
+  #lightbox .box{ width:60vw; max-width:640px; aspect-ratio:1; border-radius:16px; background:linear-gradient(135deg, var(--surface-2), var(--bg-1)); border:1px solid var(--border-strong); }
+  #lightbox .close-lb{ position:absolute; top:24px; right:32px; color:var(--text-0); font-size:28px; cursor:pointer; background:none; border:none; }
+
+  @media (max-width: 720px){
+    .widgets{ display:none; }
+    .app-window{ width:94vw; left:3vw !important; }
+    .dock-icon{ width:44px; height:44px; }
+    .dock-icon svg{ width:22px; height:22px; }
+  }
+</style>
+</head>
+<body>
+
+  <div id="boot-screen">
+    <div class="boot-logo">AS</div>
+    <div class="boot-bar-track"><div class="boot-bar-fill" id="boot-fill"></div></div>
+    <div class="boot-label">Starting up</div>
+  </div>
+
+  <div id="desktop">
+    <div class="wallpaper">
+      <div class="light-glow glow-1"></div>
+      <div class="light-glow glow-2"></div>
+      <!-- Generic, non-identifiable silhouette placeholder. Swap in your own
+           licensed wallpaper.jpg (same folder as this file) to override this. -->
+      <svg width="420" height="360" viewBox="0 0 420 360" fill="none">
+        <ellipse cx="210" cy="345" rx="150" ry="12" fill="rgba(0,0,0,0.35)"/>
+        <g fill="#05070a" opacity="0.9">
+          <circle cx="222" cy="120" r="17"/>
+          <path d="M222 137c-9 0-17 7-19 16l-8 55c-1 8 3 15 11 17l4 24h24l-2-26 9-2 12 46 20-6-14-52c-2-8-8-14-16-15l-3-1 4-36c1-10-4-20-13-20z"/>
+          <path d="M244 150l22 10 4 12-24-6z"/>
+          <rect x="262" y="150" width="7" height="46" rx="3" transform="rotate(18 262 150)"/>
+        </g>
+      </svg>
+      <div class="field-line"></div>
+    </div>
+
+    <div class="menubar">
+      <div class="left">
+        <span class="brand">◆</span>
+        <span class="item">Portfolio</span>
+        <span class="item">File</span>
+        <span class="item">View</span>
+        <span class="item">Window</span>
+      </div>
+      <div class="right">
+        <span>▲ 100%</span>
+        <span>Wi‑Fi</span>
+        <span id="clock" class="mono">--:--</span>
+      </div>
+    </div>
+
+    <div class="hero">
+      <h1 id="typed-name"><span id="typed-text"></span><span class="cursor">&nbsp;</span></h1>
+      <div class="tagline">Designer &amp; builder</div>
+    </div>
+
+    <div class="widgets">
+      <!-- TODO: replace href="#" with your real Spotify profile / last-played link -->
+      <a href="#" class="widget" id="spotify-widget">
+        <div class="spotify-top">
+          <div class="spotify-logo"></div>
+          <span>Last played</span>
+        </div>
+        <div class="spotify-body">
+          <div class="album-art"></div>
+          <div class="track-info">
+            <div class="track-name">Senorita</div>
+            <div class="track-artist">Shankar-Ehsaan-Loy, Hrithik Roshan, Maria Del Mar Fernandez, Abhay Deol, and Farhan Akhtar</div>
+          </div>
+          <div class="eq"><span></span><span></span><span></span></div>
+        </div>
+      </a>
+
+      <!-- TODO: replace href="#" with your Instagram profile link -->
+      <a href="#" class="widget" id="instagram-widget">
+        <div class="ig-top">
+          <div class="ig-avatar"><div class="ig-avatar-inner"></div></div>
+          <div>
+            <div class="ig-handle">@quantum.velocity</div>
+            <div class="ig-sub">Instagram</div>
+          </div>
+        </div>
+        <div class="ig-grid"><div></div><div></div><div></div></div>
+      </a>
+    </div>
+
+    <div class="dock">
+      <div class="dock-icon" data-app="about" title="About Me">
+        <div class="icon-face icon-about"></div>
+        <span class="tip">About Me</span>
+        <span class="dot"></span>
+      </div>
+      <div class="dock-icon" data-app="experience" title="Experience">
+        <div class="icon-face icon-experience"></div>
+        <span class="tip">Experience</span>
+        <span class="dot"></span>
+      </div>
+      <div class="dock-icon" data-app="resume" title="Resume / CV">
+        <div class="icon-face icon-resume"></div>
+        <span class="tip">Resume / CV</span>
+        <span class="dot"></span>
+      </div>
+      <div class="dock-icon" data-app="gallery" title="Gallery">
+        <div class="icon-face icon-gallery"></div>
+        <span class="tip">Gallery</span>
+        <span class="dot"></span>
+      </div>
+      <!-- TODO: point this to your real Spotify profile link -->
+      <a class="dock-icon" href="https://www.spotify.com" target="_blank" rel="noopener" title="Spotify">
+        <div class="icon-face icon-spotify"></div>
+        <span class="tip">Spotify</span>
+      </a>
+      <!-- TODO: point this to your real Instagram profile link -->
+      <a class="dock-icon" href="https://www.instagram.com/quantum.velocity" target="_blank" rel="noopener" title="Instagram">
+        <div class="icon-face icon-instagram"></div>
+        <span class="tip">Instagram</span>
+      </a>
+      <div class="dock-icon" data-app="sidequest" title="Side Quest">
+        <div class="icon-face icon-sidequest"></div>
+        <span class="tip">Side Quest</span>
+      </div>
+      <div class="dock-icon" data-app="contact" title="Contact">
+        <div class="icon-face icon-contact"></div>
+        <span class="tip">Contact</span>
+        <span class="dot"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="windows-container"></div>
+
+  <div id="lightbox">
+    <button class="close-lb" id="close-lb">&times;</button>
+    <div class="box"></div>
+  </div>
+
+<script>
+(function(){
+  /* ---------- BOOT LOGO (loads apple.jpg if present, else keeps "AS") ---------- */
+  const bootLogoEl = document.querySelector('.boot-logo');
+  const appleLogoImg = new Image();
+  appleLogoImg.onload = ()=>{
+    bootLogoEl.textContent = '';
+    bootLogoEl.style.backgroundImage = "url('apple.jpg')";
+    bootLogoEl.style.backgroundSize = 'cover';
+    bootLogoEl.style.backgroundPosition = 'center';
+  };
+  appleLogoImg.src = 'apple.jpg';
+
+  /* ---------- BOOT SEQUENCE ---------- */
+  const bootFill = document.getElementById('boot-fill');
+  const bootScreen = document.getElementById('boot-screen');
+  const desktop = document.getElementById('desktop');
+  let progress = 0;
+  const bootTimer = setInterval(()=>{
+    progress += Math.random()*18 + 6;
+    if(progress >= 100){
+      progress = 100;
+      clearInterval(bootTimer);
+      bootFill.style.width = '100%';
+      setTimeout(()=>{
+        bootScreen.classList.add('hide');
+        desktop.classList.add('show');
+      }, 250);
+      return;
+    }
+    bootFill.style.width = progress + '%';
+  }, 160);
+
+  /* ---------- CLOCK ---------- */
+  function tick(){
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if(h === 0) h = 12;
+    document.getElementById('clock').textContent =
+      `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* ---------- TYPEWRITER (EN -> backspace -> HI -> backspace -> loop) ---------- */
+  const EN = "Aditya Shaurya";
+  const HI = "आदित्य शौर्य";
+  const target = document.getElementById('typed-text');
+  const TYPE_MS = 90, DELETE_MS = 55, HOLD_MS = 1400;
+
+  function typeLoop(){
+    typeString(EN, ()=> {
+      setTimeout(()=> deleteString(()=> {
+        typeString(HI, ()=> {
+          setTimeout(()=> deleteString(typeLoop), HOLD_MS);
+        });
+      }), HOLD_MS);
+    });
+  }
+  function typeString(str, done){
+    let i = 0;
+    (function step(){
+      if(i <= str.length){
+        target.textContent = str.slice(0, i);
+        i++;
+        setTimeout(step, TYPE_MS);
+      } else { done && done(); }
+    })();
+  }
+  function deleteString(done){
+    let str = target.textContent;
+    (function step(){
+      if(str.length > 0){
+        str = str.slice(0, -1);
+        target.textContent = str;
+        setTimeout(step, DELETE_MS);
+      } else { done && done(); }
+    })();
+  }
+  typeLoop();
+
+  /* ---------- WINDOW MANAGEMENT ---------- */
+  const container = document.getElementById('windows-container');
+  const openWindows = {};
+  let zTop = 100;
+  let cascade = 0;
+
+  const APPS = {
+    about: {
+      title: 'About Me',
+      body: `
+        <span class="eyebrow">01 — About</span>
+        <h2>Hey, I'm Aditya.</h2>
+        <p> Ayooh! I'm Aditya.
+A young 15 building everything brick by brick, unlike Batman who rebuilt. I do sales, I do accounting, I do marketing and I do design as well</p>
+        <p>Beyond this realm, I'm a strategic thinker with top scores in academics and olympiads and, sharpened my skills with experiences in debating and team-based competitions as well as my passions in Stargazing, Amateur Rocketry and Microcontroller Programming.
+
+</p>
+        <!-- TODO: add your LinkedIn / X / GitHub links below -->
+        <p><a href="https://www.linkedin.com/in/aditya-shaurya-1a4b08343/">LinkedIn</a> &nbsp;·&nbsp; <a href="https://github.com/QuantumVeloocity">GitHub</a> &nbsp;·&nbsp; <a href="https://www.x.com/AdityaVelocityy">X</a></p>
+      `
+    },
+    experience: {
+      title: 'Experience',
+      body: `
+        <span class="eyebrow">02 — Work</span>
+        <h2>Experience</h2>
+        <div class="exp-item">
+          <div class="row"><span class="role">Creative Executive</span><span class="dates">2026 — Present</span></div>
+          <div class="org"><a href="#">Codorra Hackathon 26'</a></div>
+          <div class="desc">Served as a Creative Executive at Codorra Hackathon, contributing to the event's creative direction, branding, and visual identity as part of the organizing team.</div>
+        </div>
+        <div class="exp-item">
+          <div class="row"><span class="role">Founder & CEO</span><span class="dates">2025 — Present</span></div>
+          <div class="org"><a href="#">LiorVille</a></div>
+          <div class="desc">LiorVille is a market intelligence and strategic advisory firm dedicated to empowering MSMEs with the clarity, insight, and strategic direction needed to navigate complex markets, make informed decisions, and achieve sustainable competitive growth.</div>
+        </div>
+        <div class="exp-item">
+          <div class="row"><span class="role"></span><span class="dates">20XX — 20XX</span></div>
+          <div class="org"><a href="#">-</a></div>
+          <div class="desc">-</div>
+        </div>
+      `
+    },
+    resume: {
+      title: 'Resume / CV',
+      body: `
+        <span class="eyebrow">03 — Resume</span>
+        <h2>Resume</h2>
+        <div class="resume-box">
+          <div>
+            <div style="font-weight:700;color:var(--text-0);font-size:14px;">Aditya_Shaurya_Resume.pdf</div>
+            <div style="font-size:12px;color:var(--text-2);margin-top:2px;">Updated recently</div>
+          </div>
+          <!-- TODO: point this to your actual resume file -->
+          <a class="btn" href="resume.pdf" target="_blank" rel="noopener">Download</a>
+        </div>
+        <p></p>
+      `
+    },
+    contact: {
+      title: 'Contact',
+      body: `
+        <span class="eyebrow">04 — Contact</span>
+        <h2>Get in touch</h2>
+        <div class="contact-row">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>
+          <div><div class="label">Email</div><!-- TODO: your email --><div class="value"><a href="mailto:aditya.exec0@gmail.com">aditya.exec0@gmail.com</a></div></div>
+        </div>
+        <div class="contact-row">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M16 3h5v5"/><path d="M21 3l-9 9"/><path d="M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6"/></svg></div>
+          <div><div class="label">LinkedIn</div><!-- TODO: your LinkedIn --><div class="value"><a href="https://www.linkedin.com/in/aditya-shaurya-1a4b08343/">https://www.linkedin.com/in/aditya-shaurya-1a4b08343/</a></div></div>
+        </div>
+        <div class="contact-row">
+          <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.7 2.8 5.6 3.1 5.6 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4.2 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg></div>
+          <div><div class="label">GitHub</div><!-- TODO: your GitHub --><div class="value"><a href="https://www.github.com/QuantumVeloocity">github.com/QuantumVeloocity</a></div></div>
+        </div>
+      `
+    },
+    sidequest: {
+      title: 'Side Quest',
+      body: `
+        <span class="eyebrow">06 — Side Quest</span>
+        <h2>Side Quest</h2>
+        <p>It includes the stuff which doe snot fit under "Experience" and the lowkey shii</p>
+        <div class="exp-item">
+          <div class="row"><span class="role">Getting Sponsored By Diet Coke</span><span class="dates"></span></div>
+          <div class="desc">Get unlimited supply of Diet Coke 24/7!!</div>
+        </div>
+        <div class="exp-item">
+          <div class="row"><span class="role">Have a F-CKING server</span><span class="dates">20XX</span></div>
+          <div class="desc">The author tries to convey SERVER refers to 64GB RAM, 32GB RTX 5090 & 20TB of Storage.</div>
+        </div>
+        <!-- TODO: link out to any of these side projects -->
+        <p><a href="#">See more</a></p>
+      `
+    },
+    gallery: {
+      title: 'Gallery',
+      body: `
+        <span class="eyebrow">05 — Gallery</span>
+        <h2>Gallery</h2>
+        <div class="gallery-grid">
+          <!-- TODO: replace href/backgrounds with your own images -->
+          <a href="wsp2.jpeg" class="gallery-item" data-lb="1" style="background-image:url('wsp2.jpeg')"></a>
+          <a href="#" class="gallery-item" data-lb="2"></a>
+          <a href="#" class="gallery-item" data-lb="3"></a>
+          <a href="#" class="gallery-item" data-lb="4"></a>
+          <a href="#" class="gallery-item" data-lb="5"></a>
+          <a href="#" class="gallery-item" data-lb="6"></a>
+        </div>
+      `
+    }
+  };
+
+  function openWindow(appId){
+    if(openWindows[appId]){
+      const w = openWindows[appId];
+      w.el.style.display = 'flex';
+      bringToFront(w.el);
+      return;
+    }
+    const app = APPS[appId];
+    if(!app) return;
+
+    const el = document.createElement('div');
+    el.className = 'app-window';
+    cascade = (cascade + 1) % 6;
+    el.style.left = (calcCenterX() + cascade*26) + 'px';
+    el.style.top = (calcCenterY() + cascade*22) + 'px';
+    el.style.zIndex = ++zTop;
+
+    el.innerHTML = `
+      <div class="titlebar">
+        <div class="traffic">
+          <button class="t-close">×</button>
+          <button class="t-min">–</button>
+          <button class="t-max">+</button>
+        </div>
+        <div class="win-title">${app.title}</div>
+      </div>
+      <div class="win-body">${app.body}</div>
+    `;
+    container.appendChild(el);
+    openWindows[appId] = { el };
+
+    const dockIcon = document.querySelector(`.dock-icon[data-app="${appId}"]`);
+    dockIcon && dockIcon.classList.add('open');
+
+    // dragging
+    const titlebar = el.querySelector('.titlebar');
+    let dragging = false, offX = 0, offY = 0;
+    titlebar.addEventListener('mousedown', (e)=>{
+      if(e.target.closest('.traffic')) return;
+      dragging = true;
+      bringToFront(el);
+      offX = e.clientX - el.offsetLeft;
+      offY = e.clientY - el.offsetTop;
+    });
+    window.addEventListener('mousemove', (e)=>{
+      if(!dragging) return;
+      el.style.left = (e.clientX - offX) + 'px';
+      el.style.top = Math.max(30, e.clientY - offY) + 'px';
+    });
+    window.addEventListener('mouseup', ()=> dragging = false);
+
+    el.addEventListener('mousedown', ()=> bringToFront(el));
+
+    el.querySelector('.t-close').addEventListener('click', ()=>{
+      el.classList.add('closing');
+      setTimeout(()=>{
+        el.remove();
+        delete openWindows[appId];
+        dockIcon && dockIcon.classList.remove('open');
+      }, 180);
+    });
+    el.querySelector('.t-min').addEventListener('click', ()=>{
+      el.style.display = 'none';
+    });
+    el.querySelector('.t-max').addEventListener('click', ()=>{
+      el.classList.toggle('maximized');
+    });
+
+    // gallery lightbox hookup
+    el.querySelectorAll('.gallery-item').forEach(item=>{
+      item.addEventListener('click', (e)=>{
+        e.preventDefault();
+        document.getElementById('lightbox').classList.add('show');
+      });
+    });
+  }
+
+  function bringToFront(el){ el.style.zIndex = ++zTop; }
+  function calcCenterX(){ return Math.max(20, window.innerWidth/2 - 280); }
+  function calcCenterY(){ return Math.max(50, window.innerHeight/2 - 200); }
+
+  document.querySelectorAll('.dock-icon').forEach(icon=>{
+    icon.addEventListener('click', ()=> openWindow(icon.dataset.app));
+  });
+
+  /* ---------- DOCK MAGNIFICATION (neighbors scale too, like the real macOS dock) ---------- */
+  const dockEl = document.querySelector('.dock');
+  const dockIcons = Array.from(document.querySelectorAll('.dock-icon'));
+  const MAX_SCALE = 0.34;   // extra scale added to the closest icon
+  const MAX_LIFT = 16;      // extra upward shift in px for the closest icon
+  const SPREAD = 90;        // how far (px) the effect reaches to neighboring icons
+
+  dockEl.addEventListener('mousemove', (e)=>{
+    dockIcons.forEach(icon=>{
+      const rect = icon.getBoundingClientRect();
+      const iconCenter = rect.left + rect.width / 2;
+      const dist = Math.abs(e.clientX - iconCenter);
+      const factor = Math.max(0, 1 - dist / SPREAD);
+      const eased = factor * factor * (3 - 2 * factor); // smoothstep falloff
+      icon.style.transform = `translateY(${-MAX_LIFT * eased}px) scale(${1 + MAX_SCALE * eased})`;
+    });
+  });
+  dockEl.addEventListener('mouseleave', ()=>{
+    dockIcons.forEach(icon=>{ icon.style.transform = ''; });
+  });
+
+  document.getElementById('close-lb').addEventListener('click', ()=>{
+    document.getElementById('lightbox').classList.remove('show');
+  });
+  document.getElementById('lightbox').addEventListener('click', (e)=>{
+    if(e.target.id === 'lightbox') e.currentTarget.classList.remove('show');
+  });
+})();
+</script>
+
+<!--
+  NOTES FOR ADITYA:
+
+  1. WALLPAPER: I couldn't embed an actual photo of Virat Kohli — it's copyrighted
+     sports photography, not something I can source or reproduce. What's here instead
+     is a generic, non-identifiable silhouette + stadium-glow scene as a placeholder.
+     To use your own wallpaper: save any image as "wallpaper.jpg" in the same folder
+     as this index.html — the CSS already points to that filename and will pick it up
+     automatically (the gradient stays as a fallback underneath).
+
+  2. LINKS: every anchor tag that needs a real link is marked with a
+     "TODO" comment right above it (Spotify, Instagram, email, LinkedIn, GitHub,
+     resume.pdf, gallery images). Search this file for "TODO" to find all of them.
+
+  3. RESUME: drop a file named "resume.pdf" in this folder and the Download button
+     in the Resume window will work as-is.
+
+  4. GALLERY: the 6 placeholder tiles use data-lb attributes; swap the empty
+     background divs for real <img> tags or background-image URLs when you add photos.
+
+  5. SPOTIFY WIDGET: drop "spotify.jpg" (small logo, shows next to "Last played")
+     and "music.jpg" (song art, shows in the album square) in this same folder
+     and they'll appear automatically, same as wallpaper.jpg.
+
+  6. BOOT LOGO: drop "apple.jpg" in this same folder to replace the "AS"
+     monogram shown while the site is loading.
+-->
+</body>
+</html>
